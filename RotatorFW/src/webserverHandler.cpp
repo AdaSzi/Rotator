@@ -15,7 +15,9 @@ AsyncWebSocket ws("/ws");
 GlobalData lastGlobalData;
 
 void initWebServer(){  
-  Serial.println("Starting Webserver");
+  #ifdef DEBUG
+    Serial.println("Starting Webserver");
+  #endif
   
   server.on("/heap", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", String("Free heap: " + String(ESP.getFreeHeap()) + " B"));
@@ -31,7 +33,6 @@ void initWebServer(){
     seconds %= 60;
     minutes %= 60;
     hours %= 24;
-	  //Serial.printf("%s-%d\n\r", ESP.getChipModel(), ESP.getChipRevision());
     request->send(200, "text/plain", String("Compiled: " __DATE__ " " __TIME__"\nCPU: " + String(ESP.getChipModel()) + "-" + String(ESP.getChipRevision()) + "\nUptime: " + String(days)+ " days, " + String(hours) + " hours, "+ String(minutes)+ " minutes and " + String(seconds)+ " seconds"));
   });
 
@@ -49,12 +50,18 @@ void initWebServer(){
   server.addHandler(&ws);
 
 
-  Serial.println("Starting mDNS");  
+  #ifdef DEBUG
+    Serial.println("Starting mDNS");  
+  #endif
   if (!MDNS.begin("rotator")) {
-    Serial.println("Error setting up MDNS responder!");
+    #ifdef DEBUG
+      Serial.println("Error setting up MDNS responder!");
+    #endif
   }
   else {
-    Serial.println("mDNS started");    
+    #ifdef DEBUG
+      Serial.println("mDNS started");  
+    #endif  
     MDNS.addService("http", "tcp", 80);
   }
 }
@@ -86,7 +93,9 @@ void notifyClients() {
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
-  //Serial.println((char*)data);
+  #ifdef DEBUG
+    //Serial.println((char*)data);
+  #endif
   
   StaticJsonDocument<128> tempDoc;
   deserializeJson(tempDoc, (char*)data);
@@ -99,11 +108,15 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
   switch (type) {
     case WS_EVT_CONNECT:
-      Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+    #ifdef DEBUG
+        Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+    #endif
       notifyClients();
       break;
     case WS_EVT_DISCONNECT:
-      Serial.printf("WebSocket client #%u disconnected\n", client->id());
+      #ifdef DEBUG
+          Serial.printf("WebSocket client #%u disconnected\n", client->id());
+      #endif
       break;
     case WS_EVT_DATA:
       handleWebSocketMessage(arg, data, len);
@@ -131,12 +144,16 @@ public:
 
   void handleRequest(AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/setup.html", "text/html");
-    Serial.println("Served Setup");
+    #ifdef DEBUG
+      Serial.println("Served Setup");
+    #endif
   }  
 };
 
 void setupMode(){
-  Serial.println("Entered setup mode");
+  #ifdef DEBUG
+    Serial.println("Entered setup mode");
+  #endif
 
   WiFi.softAP("Rotator_Setup");
 
@@ -170,20 +187,26 @@ void notifyClientsInSetupMode(){
  void onEventInSetupMode(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
   switch (type) {
     case WS_EVT_CONNECT:{
-        Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+        #ifdef DEBUG
+              Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+        #endif
         notifyClientsInSetupMode();
       }
       break;
     case WS_EVT_DISCONNECT:
-      Serial.printf("WebSocket client #%u disconnected\n", client->id());
+      #ifdef DEBUG
+          Serial.printf("WebSocket client #%u disconnected\n", client->id());
+      #endif
       break;
     case WS_EVT_DATA:{
         AwsFrameInfo *info = (AwsFrameInfo*)arg;
 
         deserializeJson(mainConfigDoc, (char*)data);
 
-        Serial.println(F("\nConfig saving:"));
-        serializeJsonPretty(mainConfigDoc, Serial);
+        #ifdef DEBUG
+          Serial.println(F("\nConfig saving:"));
+          serializeJsonPretty(mainConfigDoc, Serial);
+        #endif
 
         saveConfig();
         notifyClientsInSetupMode();

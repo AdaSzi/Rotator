@@ -8,38 +8,52 @@
 
 bool initStorage(){    
   if(!SPIFFS.begin()){
-    Serial.println("SPIFFS Mount Failed");
+    #ifdef DEBUG
+      Serial.println("SPIFFS Mount Failed");
+    #endif
     restart();
   }
-  Serial.println("SPIFFS Mount Successful");
-
-  listDir(SPIFFS, "/", 0);
-  Serial.flush();
+  #ifdef DEBUG
+    Serial.println("SPIFFS Mount Successful");
+    listDir(SPIFFS, "/", 0);
+    Serial.flush();
+  #endif
 
   if(SPIFFS.exists("/config.json")) {
-    Serial.println("Saves.json found! - loading config...");
+    #ifdef DEBUG
+      Serial.println("Saves.json found! - loading config...");
+    #endif
     File file = SPIFFS.open("/config.json", FILE_READ);
     DeserializationError err = deserializeJson(mainConfigDoc, file);
     if (err) {
-      Serial.print(F("deserializeJson() failed with code "));
-      Serial.println(err.c_str());
+      #ifdef DEBUG
+        Serial.print(F("deserializeJson() failed with code "));
+        Serial.println(err.c_str());
 
-      Serial.println("File Content:");
-      while (file.available()) Serial.write(file.read());
-      file.close();
-      Serial.println();
+        Serial.println("File Content:");
+        while (file.available()) Serial.write(file.read());
+        file.close();
+        Serial.println();
+      #endif
 
       return false;
     };
 
     file.close();
-    Serial.println(F("\nConfig loaded:"));
-    serializeJsonPretty(mainConfigDoc, Serial);
-    Serial.flush();
+    
+    #ifdef DEBUG
+      Serial.println(F("\nConfig loaded:"));
+      serializeJsonPretty(mainConfigDoc, Serial);
+      Serial.flush();
+    #endif
+    
     return true;
   }
 
-  Serial.println("config.json not found!");
+  #ifdef DEBUG
+    Serial.println("config.json not found!");
+  #endif
+
   return false;
 }
 
@@ -48,14 +62,20 @@ void saveConfig() {
   deleteConfig();
   File configFile = SPIFFS.open("/config.json", FILE_WRITE);
   if (!configFile) {
-    Serial.println("Failed to open file for writing");
+    #ifdef DEBUG
+      Serial.println("Failed to open file for writing");
+    #endif
     return;
   }
   if (serializeJsonPretty(mainConfigDoc, configFile) == 0) {
-    Serial.println(F("Failed to write to file"));
+    #ifdef DEBUG
+      Serial.println(F("Failed to write to file"));
+    #endif
   }
   configFile.close();
-  Serial.println(F("Config saved"));
+  #ifdef DEBUG
+    Serial.println(F("Config saved"));
+  #endif
 }
 
 
@@ -63,16 +83,17 @@ void deleteConfig(){
   SPIFFS.remove("/config.json");
 }
 
+#ifdef DEBUG
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
   Serial.printf("Listing directory: %s\n", dirname);
 
   File root = fs.open(dirname);
   if (!root) {
-    Serial.println("Failed to open directory");
+      Serial.println("Failed to open directory");
     return;
   }
   if (!root.isDirectory()) {
-    Serial.println("Not a directory");
+      Serial.println("Not a directory");
     return;
   }
 
@@ -93,3 +114,4 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
     file = root.openNextFile();
   }
 }
+#endif

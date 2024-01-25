@@ -49,7 +49,9 @@ void Rotator::handleRotator(){
         globalData.currentAzimuth+=5;
         if(globalData.currentAzimuth >= 360) globalData.currentAzimuth = 0;
         //globalData.currentAzimuth = pot.getPosition();
-        //Serial.println(globalData.currentAzimuth);
+        #ifdef DEBUG
+            //Serial.println(globalData.currentAzimuth);
+        #endif
     }
 }
 

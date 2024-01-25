@@ -7,22 +7,24 @@
 #include "wifiHandler.h"
 #include "webserverHandler.h"
 
+
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   
+  digitalWrite(LED_PIN, HIGH);
+  delay(250);
+  digitalWrite(LED_PIN, LOW);
+  delay(250);
+  digitalWrite(LED_PIN, HIGH);
+  delay(250);
+  digitalWrite(LED_PIN, LOW);
+  delay(250);
 
-  digitalWrite(LED_PIN, HIGH);
-  delay(250);
-  digitalWrite(LED_PIN, LOW);
-  delay(250);
-  digitalWrite(LED_PIN, HIGH);
-  delay(250);
-  digitalWrite(LED_PIN, LOW);
-  delay(250);
-  
-  Serial.begin(115200);
-  Serial.println("Starting Omega rotator controller");
+  #ifdef DEBUG
+    Serial.begin(115200);
+    Serial.println("Starting Omega rotator controller");
+  #endif
   
   if(!initStorage()){
     setupMode();

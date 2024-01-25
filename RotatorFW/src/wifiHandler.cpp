@@ -14,17 +14,20 @@ void initWifi(){
         if (cfg["ssid"]) WiFiMulti.addAP(cfg["ssid"], cfg["password"]);
     }
 
-    Serial.print("Waiting for WiFi...");
+    #ifdef DEBUG
+        Serial.print("Waiting for WiFi...");
+    #endif
     while(WiFiMulti.run() != WL_CONNECTED) {
         delay(100);
-        //Serial.print('.');
         if(millis() > 20000) setupMode();
     }
-    Serial.println();
-    Serial.print("Connected to: ");
-    Serial.print(WiFi.SSID());
-    Serial.print(" with IP address: ");
-    Serial.println(WiFi.localIP());
+    #ifdef DEBUG
+        Serial.println();
+        Serial.print("Connected to: ");
+        Serial.print(WiFi.SSID());
+        Serial.print(" with IP address: ");
+        Serial.println(WiFi.localIP());
+    #endif
 }
 
 void handleWifi(){
@@ -32,13 +35,21 @@ void handleWifi(){
     if (WiFiMulti.run() == WL_CONNECTED) {
         if (!hasBeenConnected) {
             hasBeenConnected = true;
-            Serial.print("Reconnected to: ");
-            Serial.print(WiFi.SSID());
-            Serial.print(" with IP address: ");
-            Serial.println(WiFi.localIP());
+
+            #ifdef DEBUG
+                Serial.print("Reconnected to: ");
+                Serial.print(WiFi.SSID());
+                Serial.print(" with IP address: ");
+                Serial.println(WiFi.localIP());
+            #endif
         }
     }
     else {
+        static unsigned long disconectionTime = 0;
+        if(hasBeenConnected) disconectionTime = millis();
+        
+        if(disconectionTime + 30000 < millis()) restart();
+
         hasBeenConnected = false;
     }
 }

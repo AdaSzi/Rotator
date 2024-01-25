@@ -15,7 +15,9 @@ void ledBlink(uint16_t period){
 }
 
 void restart(){
-  Serial.println("\nRestarting...");
+  #ifdef DEBUG
+    Serial.println("\nRestarting...");
+  #endif
   delay(1000);
   ESP.restart();
 }
