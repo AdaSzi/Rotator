@@ -24,7 +24,6 @@ float Pot::lowPassFilter(uint16_t inputValue) {
     return filteredValue;
 }
 
-
 float Pot::getPosition() {
     return position;
 }
@@ -46,6 +45,8 @@ void Motor::right(uint8_t speed) {
 void Motor::stop(uint8_t speed) {
     
 }
+
+
 
 Rotator::Rotator(uint8_t potPin) : pot(potPin), motor() {
     globalData.targetAzimuth = pot.getPosition();
