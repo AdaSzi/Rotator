@@ -1,205 +1,230 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      padding: 20px;
-      justify-content: center;
-      align-items: center;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 20px;
+        justify-content: center;
+        align-items: center;
+      }
 
-    form {
-      max-width: 400px;
-      margin: auto;
-    }
+      form {
+        max-width: 400px;
+        margin: auto;
+      }
 
-    h1 {
-      text-align: center;
-    }
+      h1 {
+        text-align: center;
+      }
 
-    label {
-      display: block;
-      margin-bottom: 8px;
-    }
+      label {
+        display: block;
+        margin-bottom: 8px;
+      }
 
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 16px;
-    }
+      input {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 16px;
+      }
 
-    button {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin: 5px 5px 5px 0px;
-    }
+      button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px 5px 5px 0px;
+      }
 
-    .center {
-      margin: auto;
-      max-width: 400px;
-    }
+      .center {
+        margin: auto;
+        max-width: 400px;
+      }
 
-    button:hover {
-      color: white;
-      background-color: #45a049;
-    }
+      button:hover {
+        color: white;
+        background-color: #45a049;
+      }
 
-    .redBtn {
-      color: white;
-      background-color: #FF5733;
-    }
+      .redBtn {
+        color: white;
+        background-color: #ff5733;
+      }
 
-    .redBtn:hover {
-      background-color: #E5542E;
-    }
+      .redBtn:hover {
+        background-color: #e5542e;
+      }
 
-    .greenBtn {
-      color: white;
-      background-color: #4CAF50;
-    }
+      .greenBtn {
+        color: white;
+        background-color: #4caf50;
+      }
 
-    .greenBtn:hover {
-      background-color: #45a049;
-    }
-  </style>
-  <title>WiFi Configuration Form</title>
-</head>
-<body>
-    
-  <form id="wifiForm">
-    <h1>Rotator Setup</h1>
+      .greenBtn:hover {
+        background-color: #45a049;
+      }
+    </style>
+    <title>WiFi Configuration Form</title>
+  </head>
+  <body>
+    <form id="wifiForm">
+      <h1>Rotator Setup</h1>
 
-    <label for="deviceName">Device Name:</label>
-    <input type="text" id="deviceName" name="deviceName">
+      <label for="deviceName">Device Name:</label>
+      <input type="text" id="deviceName" name="deviceName" />
 
-    <div id="wifiConfigs">
-      <div class="wifiConfig">
-        <label for="wifiSSID">WiFi SSID:</label>
-        <input id="wifiSSID" type="text" name="wifiSSID" title="SSID">
+      <div id="wifiConfigs">
+        <div class="wifiConfig">
+          <label for="wifiSSID">WiFi SSID:</label>
+          <input id="wifiSSID" type="text" name="wifiSSID" title="SSID" />
 
-        <label for="wifiPassword">WiFi Password:</label>
-        <input id="wifiPassword" type="password" name="wifiPassword" title="Password">
+          <label for="wifiPassword">WiFi Password:</label>
+          <input
+            id="wifiPassword"
+            type="password"
+            name="wifiPassword"
+            title="Password"
+          />
+        </div>
       </div>
+
+      <button type="button" class="greenBtn" onclick="addWiFi()">
+        Add WiFi entry
+      </button>
+      <button type="button" class="redBtn" onclick="removeWiFi()">
+        Remove WiFi entry
+      </button>
+      <button
+        type="button"
+        class="greenBtn"
+        onclick="prepareJson()"
+        style="display: block"
+      >
+        Overwrite save and Restart
+      </button>
+    </form>
+    <div class="center">
+      <div id="savedData" class="center"></div>
     </div>
 
-    <button type="button" class="greenBtn" onclick="addWiFi()" >Add WiFi entry</button>
-    <button type="button" class="redBtn" onclick="removeWiFi()">Remove WiFi entry</button>
-    <button type="button" class="greenBtn" onclick="prepareJson()" style="display: block">Overwrite save and Restart</button>
-  </form>
-  <div class="center">
-    <div id="savedData" class="center"></div>
-  </div>
-  
+    <script>
+      //const gateway = `ws://192.168.4.1/ws`;
+      const gateway = `ws://${window.location.hostname}/ws`;
+      socket = new WebSocket(gateway);
 
-  <script>
-    //const gateway = `ws://192.168.4.1/ws`;
-    const gateway = `ws://${window.location.hostname}/ws`;
-    socket = new WebSocket(gateway);
-      
-    socket.onopen = () => {
-      console.log('WebSocket connection opened.');
-    };
+      socket.onopen = () => {
+        console.log("WebSocket connection opened.");
+      };
 
-    socket.onmessage = (event) => {
-      console.log("Got data: " + event.data);
-      const data = JSON.parse(event.data);
-      console.log("parsed data: " + data);
+      socket.onmessage = (event) => {
+        console.log("Got data: " + event.data);
+        const data = JSON.parse(event.data);
+        console.log("parsed data: " + data);
 
-      if(Object.keys(data).length > 0){
-        displayJsonData(data);
-      }
-    };
+        if (Object.keys(data).length > 0) {
+          displayJsonData(data);
+        }
+      };
 
-  function displayJsonData(data) {
-    var displayDiv = document.getElementById("savedData");
+      function displayJsonData(data) {
+        var displayDiv = document.getElementById("savedData");
 
-    displayDiv.innerHTML += "<h3>Current save:</h3>";
-    for (var key in data) {
-      if (key !== "wifi") {
-        displayDiv.innerHTML += "<p>" + key + ": " + data[key] + "</p>";
-      }
-    }
-
-    if (data.wifi && data.wifi.length > 0) {
-      displayDiv.innerHTML += "<p><b>Saved WiFi networks:</b></p>";
-      displayDiv.innerHTML += "<ul>";
-      data.wifi.forEach(function(wifi) {
-        displayDiv.innerHTML += "<li>" + wifi.ssid + "</li>";
-      });
-      displayDiv.innerHTML += "</ul>";
-    }
-}
-
-
-    function addWiFi() {
-      var wifiConfigs = document.getElementById('wifiConfigs');
-      var newWiFiConfig = document.querySelector('.wifiConfig').cloneNode(true);
-
-      newWiFiConfig.querySelector('[name="wifiSSID"]').value = '';
-      newWiFiConfig.querySelector('[name="wifiPassword"]').value = '';
-
-      wifiConfigs.appendChild(newWiFiConfig);
-    }
-
-    function removeWiFi() {
-      var wifiConfigs = document.getElementById('wifiConfigs');
-      var wifiConfigElements = document.querySelectorAll('.wifiConfig');
-
-      if (wifiConfigElements.length > 1) {
-        var lastWiFiConfig = wifiConfigElements[wifiConfigElements.length - 1];
-        var wifiSSID = lastWiFiConfig.querySelector('[name="wifiSSID"]').value;
-        var wifiPassword = lastWiFiConfig.querySelector('[name="wifiPassword"]').value;
-
-        if (wifiSSID || wifiPassword) {
-          var isSure = confirm("Are you sure? The last WiFi configuration is filled. Removing it will discard the filled information.");
-          if (!isSure) {
-            return;
+        displayDiv.innerHTML += "<h3>Current save:</h3>";
+        for (var key in data) {
+          if (key !== "wifi") {
+            displayDiv.innerHTML += "<p>" + key + ": " + data[key] + "</p>";
           }
         }
 
-        wifiConfigs.removeChild(lastWiFiConfig);
-      }
-    }
-
-    function prepareJson() {
-      var deviceName = document.getElementById('deviceName').value;
-      var wifiConfigElements = document.querySelectorAll('.wifiConfig');
-      var wifiConfigs = [];
-
-      if (!deviceName) {
-        alert("Please fill in the Device Name.");
-        return;
+        if (data.wifi && data.wifi.length > 0) {
+          displayDiv.innerHTML += "<p><b>Saved WiFi networks:</b></p>";
+          displayDiv.innerHTML += "<ul>";
+          data.wifi.forEach(function (wifi) {
+            displayDiv.innerHTML += "<li>" + wifi.ssid + "</li>";
+          });
+          displayDiv.innerHTML += "</ul>";
+        }
       }
 
-      wifiConfigElements.forEach(function(configElement) {
-        var wifiSSID = configElement.querySelector('[name="wifiSSID"]').value;
-        var wifiPassword = configElement.querySelector('[name="wifiPassword"]').value;
+      function addWiFi() {
+        var wifiConfigs = document.getElementById("wifiConfigs");
+        var newWiFiConfig = document
+          .querySelector(".wifiConfig")
+          .cloneNode(true);
 
-        if (!wifiSSID) {
-          alert("Please fill in all WiFi SSIDs.");
+        newWiFiConfig.querySelector('[name="wifiSSID"]').value = "";
+        newWiFiConfig.querySelector('[name="wifiPassword"]').value = "";
+
+        wifiConfigs.appendChild(newWiFiConfig);
+      }
+
+      function removeWiFi() {
+        var wifiConfigs = document.getElementById("wifiConfigs");
+        var wifiConfigElements = document.querySelectorAll(".wifiConfig");
+
+        if (wifiConfigElements.length > 1) {
+          var lastWiFiConfig =
+            wifiConfigElements[wifiConfigElements.length - 1];
+          var wifiSSID =
+            lastWiFiConfig.querySelector('[name="wifiSSID"]').value;
+          var wifiPassword = lastWiFiConfig.querySelector(
+            '[name="wifiPassword"]'
+          ).value;
+
+          if (wifiSSID || wifiPassword) {
+            var isSure = confirm(
+              "Are you sure? The last WiFi configuration is filled. Removing it will discard the filled information."
+            );
+            if (!isSure) {
+              return;
+            }
+          }
+
+          wifiConfigs.removeChild(lastWiFiConfig);
+        }
+      }
+
+      function prepareJson() {
+        var deviceName = document.getElementById("deviceName").value;
+        var wifiConfigElements = document.querySelectorAll(".wifiConfig");
+        var wifiConfigs = [];
+
+        if (!deviceName) {
+          alert("Please fill in the Device Name.");
           return;
         }
 
-        var wifiConfig = {
-          "ssid": wifiSSID,
-          "password": wifiPassword
-        };
+        wifiConfigElements.forEach(function (configElement) {
+          var wifiSSID = configElement.querySelector('[name="wifiSSID"]').value;
+          var wifiPassword = configElement.querySelector(
+            '[name="wifiPassword"]'
+          ).value;
 
-        wifiConfigs.push(wifiConfig);
-      });
+          if (!wifiSSID) {
+            alert("Please fill in all WiFi SSIDs.");
+            return;
+          }
 
-      if (wifiConfigs.length === 0) {
-        alert("Please add at least one WiFi configuration.");
-        return;
+          var wifiConfig = {
+            ssid: wifiSSID,
+            password: wifiPassword,
+          };
+
+          wifiConfigs.push(wifiConfig);
+        });
+
+        if (wifiConfigs.length === 0) {
+          alert("Please add at least one WiFi configuration.");
+          return;
+        }
+        socket.send(
+          JSON.stringify({ deviceName: deviceName, wifi: wifiConfigs })
+        );
       }
-      socket.send(JSON.stringify({"deviceName": deviceName, "wifi": wifiConfigs }));
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
