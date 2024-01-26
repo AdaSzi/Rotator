@@ -76,24 +76,50 @@ void notFound(AsyncWebServerRequest *request) {
   request->redirect("/");
 }
 
+#ifdef DEBUG
+  uint8_t mps = 0;
+#endif
 
-unsigned long nextClientsUpdate = 0;
 void handleWebServer() {
   ws.cleanupClients();
 
-  if (/*lastGlobalData != globalData ||*/ millis() > nextClientsUpdate) {    
-    nextClientsUpdate = millis() + WEBSOCKET_UPDATE_INTERVAL;
+  static unsigned long nextClientsUpdateHB = 0;
+  static unsigned long nextClientsUpdateFast = 0;
+  if (millis() > nextClientsUpdateHB) {    
+    nextClientsUpdateHB = millis() + WEBSOCKET_UPDATE_INTERVAL;
+    notifyClients();    
+  }
+
+  if (lastGlobalData != globalData && millis() > nextClientsUpdateFast) {    
+    nextClientsUpdateFast = millis() + 100;
+
+    nextClientsUpdateHB = millis() + WEBSOCKET_UPDATE_INTERVAL;
 
     lastGlobalData = globalData;
     notifyClients();
   }
+
+  #ifdef DEBUG
+    static unsigned long mpsTimer = 0;
+    if (millis() > mpsTimer) {    
+      mpsTimer = millis() + 1000;
+      Serial.print("MPS: ");
+      Serial.println(mps);
+      mps=0;
+    }
+  #endif
 }
 
 void notifyClients() {
-  char json[512];
-  sprintf(json, "{\"current_position\": %d, \"target_position\": %d, \"current_speed\": %d}", globalData.currentAzimuth, globalData.targetAzimuth, globalData.currentSpeed);
+  if(ws.availableForWriteAll() && ws.count()){
+    char json[512];
+    sprintf(json, "{\"current_position\": %d, \"target_position\": %d, \"current_speed\": %d}", globalData.currentAzimuth, globalData.targetAzimuth, globalData.currentSpeed);
 
-  ws.textAll(json);
+    ws.textAll(json);
+    #ifdef DEBUG
+      mps++;
+    #endif
+  }
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -131,6 +157,8 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
       break;
   }
 }
+
+
 
 
 
@@ -174,7 +202,7 @@ void setupMode(){
     dnsServer.processNextRequest();
     ws.cleanupClients();
 
-    ledBlink(250);
+    ledBlink(200);
   }
 }
 

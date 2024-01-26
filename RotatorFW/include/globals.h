@@ -7,16 +7,16 @@
 #define LED_PIN 8
 #define BUTTON_PIN 9
 
-#define ROTATOR_POT_PIN 3
+#define ROTATOR_POT_PIN A2
 
 #define BUTTON_HOLD_RESET_TIME 10000
 
-#define WEBSOCKET_UPDATE_INTERVAL 500
+#define WEBSOCKET_UPDATE_INTERVAL 1000
 
 struct GlobalData {
     uint16_t currentAzimuth = 0;
     uint16_t targetAzimuth = 0;
-    uint16_t currentSpeed = 0;
+    uint8_t currentSpeed = 0;
     bool isMoving = false;
 
     bool operator == (const GlobalData& other) const {

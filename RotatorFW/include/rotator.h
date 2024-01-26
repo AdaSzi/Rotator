@@ -4,33 +4,37 @@
 
 
 class Pot {
-public:
-    uint8_t pin;
-    Pot(uint8_t pin);
+    public:
+        Pot(uint8_t pin);
 
-    uint16_t getPosition();
+        void handlePot();
+        float getPosition();
+
+    private:
+        uint8_t pin;
+        float position;
+        float lowPassFilter(uint16_t inputValue);
 };
 
 class Motor {
-public:
-    Motor();
+    public:
+        Motor();
 
-    void left(uint8_t speed);
-    void right(uint8_t speed);
-    void stop(uint8_t speed);
+        void left(uint8_t speed);
+        void right(uint8_t speed);
+        void stop(uint8_t speed);
 };
 
 class Rotator {
-private:
-    Motor motor;
-    Pot pot;
+    private:
+        Motor motor;
+        Pot pot;
 
-public:
-    Rotator(uint8_t potPin);
+    public:
+        Rotator(uint8_t potPin);
 
-    void handleRotator();
-    void setTargetPosition(int target);
-    bool isMoving();
+        void handleRotator();
+        void setTargetPosition(int target);
+        bool isMoving();
 };
-
 #endif

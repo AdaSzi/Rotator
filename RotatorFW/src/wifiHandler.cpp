@@ -19,7 +19,10 @@ void initWifi(){
     #endif
     while(WiFiMulti.run() != WL_CONNECTED) {
         delay(100);
-        if(millis() > 20000) setupMode();
+        if(millis() > 20000) {
+            //setupMode();
+            restart();
+        }
     }
     #ifdef DEBUG
         Serial.println();
