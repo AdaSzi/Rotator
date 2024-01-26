@@ -16,10 +16,10 @@ void Pot::handlePot() {
 }
 
 float Pot::lowPassFilter(uint16_t inputValue) {
-    const float alpha = 0.01;  // Filter coefficient (adjust as needed)
+    const float coefficient = 0.01;
     static float filteredValue = 0;
 
-    filteredValue = alpha * inputValue + (1 - alpha) * filteredValue;
+    filteredValue = coefficient * inputValue + (1 - coefficient) * filteredValue;
 
     return filteredValue;
 }
