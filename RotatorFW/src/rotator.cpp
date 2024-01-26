@@ -2,21 +2,15 @@
 #include "Arduino.h"
 #include "globals.h"
 
-#include "driver/adc.h"
 
 Pot::Pot(uint8_t potPin) {
     pin = potPin;
-    
-
-    adc1_config_width(ADC_WIDTH_BIT_12);
-    adc1_config_channel_atten(ADC1_CHANNEL_3, ADC_ATTEN_DB_11);
 
     pinMode(pin, INPUT);
 }
 
 uint16_t Pot::getPosition() {
-    //return analogRead(pin);
-    return adc1_get_raw((adc1_channel_t)3);
+    return 0; //analogRead(pin);
 }
 
 

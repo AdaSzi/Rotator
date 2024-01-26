@@ -36,12 +36,17 @@ void initWebServer(){
     request->send(200, "text/plain", String("Compiled: " __DATE__ " " __TIME__"\nCPU: " + String(ESP.getChipModel()) + "-" + String(ESP.getChipRevision()) + "\nUptime: " + String(days)+ " days, " + String(hours) + " hours, "+ String(minutes)+ " minutes and " + String(seconds)+ " seconds"));
   });
 
-  //server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
-  server.serveStatic("/ui", SPIFFS, "/index.html");
-  server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
+  server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+
+  server.serveStatic("/js/compass_degrees.js", SPIFFS, "/js/compass_degrees.js");
+  server.serveStatic("/js/main.js", SPIFFS, "/js/main.js");
+  
+  //server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
   server.serveStatic("/favicon.png", SPIFFS, "/favicon.png");
+
   server.serveStatic("/Muli-Light.ttf", SPIFFS, "/Muli-Light.ttf");
-  server.serveStatic("/HelveticaMono.ttf", SPIFFS, "/HelveticaMono.ttf");
+  //server.serveStatic("/HelveticaMono.ttf", SPIFFS, "/HelveticaMono.ttf");
+  server.serveStatic("/styles.css", SPIFFS, "/styles.css");
 
   server.onNotFound(notFound);
   server.begin();
@@ -68,7 +73,7 @@ void initWebServer(){
 
 void notFound(AsyncWebServerRequest *request) {
   //request->send(404, "text/plain", "404 Not found");
-  request->redirect("/ui");
+  request->redirect("/");
 }
 
 
