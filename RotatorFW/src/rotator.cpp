@@ -2,21 +2,31 @@
 #include "Arduino.h"
 #include "globals.h"
 
-#include "driver/adc.h"
-
 Pot::Pot(uint8_t potPin) {
     pin = potPin;
-    
-
-    adc1_config_width(ADC_WIDTH_BIT_12);
-    adc1_config_channel_atten(ADC1_CHANNEL_3, ADC_ATTEN_DB_11);
 
     pinMode(pin, INPUT);
+    
+    //0V - 2.9V -> 0 - 4096
+    position = map(analogRead(pin), 0, 4096, 0, 360 + 90);
 }
 
-uint16_t Pot::getPosition() {
-    //return analogRead(pin);
-    return adc1_get_raw((adc1_channel_t)3);
+void Pot::handlePot() {
+    position = map(lowPassFilter(analogRead(pin)), 0, 4096, 0, 360 + 90);
+}
+
+float Pot::lowPassFilter(uint16_t inputValue) {
+    const float alpha = 0.01;  // Filter coefficient (adjust as needed)
+    static float filteredValue = 0;
+
+    filteredValue = alpha * inputValue + (1 - alpha) * filteredValue;
+
+    return filteredValue;
+}
+
+
+float Pot::getPosition() {
+    return position;
 }
 
 
@@ -38,17 +48,17 @@ void Motor::stop(uint8_t speed) {
 }
 
 Rotator::Rotator(uint8_t potPin) : pot(potPin), motor() {
-
+    globalData.targetAzimuth = pot.getPosition();
 }
 
 void Rotator::handleRotator(){
-    static unsigned long nextUpdate = 0;
-    if (millis() > nextUpdate) {    
-        nextUpdate = millis() + 100;
+    pot.handlePot();
 
-        globalData.currentAzimuth+=5;
-        if(globalData.currentAzimuth >= 360) globalData.currentAzimuth = 0;
-        //globalData.currentAzimuth = pot.getPosition();
+    static unsigned long nextUpdate = 0;
+    if (millis() > nextUpdate) {   
+        nextUpdate = millis() + 50;
+        globalData.currentAzimuth = pot.getPosition();
+
         #ifdef DEBUG
             //Serial.println(globalData.currentAzimuth);
         #endif
