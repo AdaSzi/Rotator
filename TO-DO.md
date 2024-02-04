@@ -1,7 +1,9 @@
 # TO-DO
 
-- Include better compass .svg (more precise)
+> [!IMPORTANT]
+> HW implementation
+> Location presets
 
-# Ideas
-- Location presets
-- Multiple rotator support
+> [!TIP]
+> User lock controls
+> Multiple rotator support

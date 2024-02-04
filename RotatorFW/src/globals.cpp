@@ -3,6 +3,7 @@
 
 GlobalData globalData;
 StaticJsonDocument<8192> mainConfigDoc;
+char sharedConfigJson[8192];
 
 Rotator rotator = Rotator(ROTATOR_POT_PIN);
 

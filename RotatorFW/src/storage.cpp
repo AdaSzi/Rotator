@@ -40,12 +40,27 @@ bool initStorage(){
     };
 
     file.close();
-    
+
     #ifdef DEBUG
       Serial.println(F("\nConfig loaded:"));
       serializeJsonPretty(mainConfigDoc, Serial);
       Serial.flush();
     #endif
+
+    
+    DynamicJsonDocument staticConfigDoc = mainConfigDoc;
+    staticConfigDoc.remove("wifi");    
+
+    serializeJson(staticConfigDoc, sharedConfigJson);
+
+
+    #ifdef DEBUG
+      Serial.println(F("\nStaticConfig created:"));
+      serializeJsonPretty(staticConfigDoc, Serial);
+      Serial.flush();
+      Serial.println();
+    #endif
+    
     
     return true;
   }

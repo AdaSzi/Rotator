@@ -33,11 +33,11 @@ struct GlobalData {
 
 extern GlobalData globalData;
 extern StaticJsonDocument<8192> mainConfigDoc;
+extern char sharedConfigJson[8192];
 
 extern Rotator rotator;
 
 void ledBlink(uint16_t period);
 void restart();
-//extern bool shouldNotifyClients;
 
 #endif

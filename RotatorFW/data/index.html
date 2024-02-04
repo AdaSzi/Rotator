@@ -16,11 +16,9 @@
         * {
             box-sizing: border-box;
         }
-        h1, h2, h3, h4 {
-            font-family: Muli, serif;
-        }
         h1 {
             font-size: 1.2rem;
+			text-align: center;
         }
         html {
             font-family: Muli, sans-serif;
@@ -198,7 +196,7 @@
 </head>
 <body>
 <header>
-	<h1>Rotator</h1>
+	<h1 id="rotatorTitle">Undefined Rotator</h1>
 </header>
 
 <div class="container">
@@ -308,7 +306,7 @@
 		<div class="popup-contents">
 			<div class="popup-inner" data-handle="info">
 				<p>This is the antenna rotator interface for <a href='https://om3kff.sk'>OM3KFF</a>.</p>
-				<p>See the <a href='/uptime'>uptime</a> or the <a href='/heap'>used RAM</a>.</p>
+				<p>See the <a href='/info'>info</a> or the <a href='/heap'>used RAM</a>.</p>
 				<p>This project's GUI is based on <a href='https://github.com/lamplightdev/compass'>Chris Haynes'
 					work</a>.</p>
 			</div>
@@ -517,8 +515,8 @@ class RotatorSocket {
 		this.socket = null;
 		this.messageTimeout = null;
 
-		this.gateway = `ws://rotator.local/ws`;
-		//this.gateway = `ws://${window.location.hostname}/ws`;
+		//this.gateway = `ws://rotator.local/ws`;
+		this.gateway = `ws://${window.location.hostname}/ws`;
 	}
 
 	setupWebSocket() {
@@ -647,7 +645,7 @@ class RotatorIndicator {
 		this.currentAzimuth.textContent = current_position % 360 + '°';
 		this.targetAzimuth.textContent = target_position % 360 + '°';
 		this.rotationSpeed.textContent = current_speed + '°';
-		window.azimuthInRoseDial.textContent = current_position % 360;
+		this.azimuthInRoseDial.textContent = current_position % 360;
 
 		if (current_position !== this.oldCurrentPosition) {
 			this.rotateIndicator(this.azimuthIndicator, current_position);
@@ -709,7 +707,18 @@ const renderCompass = svg => {
 	svg.appendChild(lineFrag);
 }
 
+async function updateHeader() {
+	const response = await fetch(`http://${window.location.hostname}/config`);
+	const data = await response.json();
+	if (data.deviceName) {
+		document.getElementById('rotatorTitle').innerText = data.deviceName;
+		document.title = data.deviceName;
+	}
+}
+
 renderCompass(document.querySelector('.compass_rose_dial'));
+updateHeader();
+
 
 }());
 </script>
