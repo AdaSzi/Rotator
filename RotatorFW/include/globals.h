@@ -9,6 +9,10 @@
 
 #define ROTATOR_POT_PIN A2
 
+#define ROTATOR_MOTOR_CW_PIN 1
+#define ROTATOR_MOTOR_CCW_PIN 2
+#define ROTATOR_MOTOR_PWM_PIN 3
+
 #define BUTTON_HOLD_RESET_TIME 10000
 
 #define WEBSOCKET_UPDATE_INTERVAL 1000
@@ -16,7 +20,7 @@
 struct GlobalData {
     uint16_t currentAzimuth = 0;
     uint16_t targetAzimuth = 0;
-    uint8_t currentSpeed = 0;
+    uint16_t currentSpeed = 0;
     bool isMoving = false;
 
     bool operator == (const GlobalData& other) const {

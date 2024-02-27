@@ -1,0 +1,5 @@
+Pot = 500 Ohm
+U_Pot = 6V
+
+ESP32C3 ADC:
+	0V - 2.9V -> 0 - 4096

@@ -37,16 +37,10 @@ void initWebServer(){
   });
 
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
-
-  server.serveStatic("/js/compass_degrees.js", SPIFFS, "/js/compass_degrees.js");
-  server.serveStatic("/js/main.js", SPIFFS, "/js/main.js");
-  
-  //server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
+  server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
   server.serveStatic("/favicon.png", SPIFFS, "/favicon.png");
-
   server.serveStatic("/Muli-Light.ttf", SPIFFS, "/Muli-Light.ttf");
   //server.serveStatic("/HelveticaMono.ttf", SPIFFS, "/HelveticaMono.ttf");
-  server.serveStatic("/styles.css", SPIFFS, "/styles.css");
 
   server.onNotFound(notFound);
   server.begin();
@@ -131,7 +125,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
   StaticJsonDocument<128> tempDoc;
   deserializeJson(tempDoc, (char*)data);
 
-  globalData.targetAzimuth = tempDoc["target_position"];
+  rotator.setTargetPosition(tempDoc["target_position"]);
   notifyClients();
   
 }
