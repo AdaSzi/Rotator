@@ -25,12 +25,15 @@ class Motor {
 
         void handleMotor();
 
-    private:
-        uint8_t pwmPin, cwPin, ccwPin;
-
         void left(uint8_t speed);
         void right(uint8_t speed);
-        void stop(uint8_t speed);
+        void stop();
+
+    private:
+        enum Color {STOP, RIGHT, LEFT};
+        uint8_t status;
+        unsigned long nextEnableTime = 0;
+        uint8_t pwmPin, cwPin, ccwPin;
 };
 
 class Rotator {

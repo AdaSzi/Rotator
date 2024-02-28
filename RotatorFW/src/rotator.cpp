@@ -17,7 +17,7 @@ void Pot::handlePot() {
     if (millis() > nextUpdate) {   
         nextUpdate = millis() + 50;
 
-        position = map(lowPassFilter(analogRead(pin), 0.01), 0, 4096, 0, 360 + 90);
+        position = map(lowPassFilter(analogRead(pin), 0.1), 0, 4096, 0, 360 + 90);
 
         #ifdef DEBUG
             //Serial.println(globalData.currentAzimuth);
@@ -48,9 +48,7 @@ Motor::Motor(uint8_t pwm, uint8_t cw, uint8_t ccw) {
     pinMode(cwPin, OUTPUT);
     pinMode(ccwPin, OUTPUT);
     pinMode(pwmPin, OUTPUT);
-    digitalWrite(cwPin, LOW);
-    digitalWrite(ccwPin, LOW);
-    digitalWrite(pwmPin, LOW);
+    stop();
 
     #ifdef DEBUG
         Serial.println("Motor started: ");
@@ -62,29 +60,59 @@ void Motor::handleMotor(){
 }
 
 void Motor::right(uint8_t speed) {
-    digitalWrite(ccwPin, LOW);
+    if(status != LEFT && nextEnableTime < millis()){
+        digitalWrite(ccwPin, LOW);
 
-    digitalWrite(cwPin, HIGH);
-    analogWrite(pwmPin, speed);
+        digitalWrite(cwPin, HIGH);
+        analogWrite(pwmPin, speed);
+
+        status = RIGHT;
+
+        #ifdef DEBUG
+            Serial.print("Motor R, speed: ");
+            Serial.println(speed);
+        #endif
+    }
+    else stop();
 }
 
 void Motor::left(uint8_t speed) {
-    digitalWrite(cwPin, LOW);
+    if(status != RIGHT && nextEnableTime < millis()){
+        digitalWrite(cwPin, LOW);
 
-    digitalWrite(ccwPin, HIGH);
-    analogWrite(pwmPin, speed);    
+        digitalWrite(ccwPin, HIGH);
+        analogWrite(pwmPin, speed); 
+
+        status = LEFT;
+
+        #ifdef DEBUG
+            Serial.print("Motor L, speed: ");
+            Serial.println(speed);
+        #endif  
+    }
+    else stop();
 }
 
-void Motor::stop(uint8_t speed) {
+void Motor::stop() {
+    if(status != STOP) {
+        nextEnableTime = millis() + 1000;
+    }
     digitalWrite(cwPin, LOW);
     digitalWrite(ccwPin, LOW);
-    digitalWrite(pwmPin, LOW);  
+    digitalWrite(pwmPin, LOW);
+
+    status = STOP;
+
+    #ifdef DEBUG
+        Serial.println("Motor stopped");
+    #endif
 }
 
 
 
 Rotator::Rotator(uint8_t potPin, uint8_t pwmMotPin, uint8_t cwMotPin, uint8_t ccwMotPin, uint16_t* Input, uint16_t* Output, uint16_t* Setpoint): 
-    pot(potPin), motor(pwmMotPin, cwMotPin, ccwMotPin), pidController(&controllerInput, &controllerOutput, &controllerSetpoint, 2, 5, 1, P_ON_M, DIRECT) {
+    pot(potPin), motor(pwmMotPin, cwMotPin, ccwMotPin), 
+    pidController(&controllerInput, &controllerOutput, &controllerSetpoint, 100, 20, 0, P_ON_M, DIRECT) {
 
     rotatorCurrentPosition = Input;
     rotatorMotorSpeed = Output;
@@ -105,8 +133,22 @@ void Rotator::handleRotator(){
     *rotatorCurrentPosition = pot.getPosition();
 
     controllerInput = pot.getPosition();
+
     if(pidController.Compute()){
-        *rotatorMotorSpeed = controllerOutput;
+        if(abs(controllerOutput) < 100) {
+            *rotatorMotorSpeed = 0;
+            motor.stop();
+        } 
+        else if(abs(*rotatorCurrentPosition - *rotatorTargetPosition) > 1){
+            if(0 < controllerOutput) {
+                *rotatorMotorSpeed = abs(controllerOutput);
+                motor.right(*rotatorMotorSpeed);
+            }
+            else if(controllerOutput < 0){
+                *rotatorMotorSpeed = abs(controllerOutput);
+                motor.left(*rotatorMotorSpeed);
+            }
+        }
 
         #ifdef DEBUG
             Serial.println("Controller data: ");
@@ -118,7 +160,7 @@ void Rotator::handleRotator(){
         #endif
     }
 
-    motor.handleMotor();
+    //motor.handleMotor();
 }
 
 void Rotator::setTargetPosition(uint16_t target) {

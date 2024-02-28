@@ -37,7 +37,7 @@ void initWebServer(){
   });
 
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
-  server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
+  //server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
   server.serveStatic("/favicon.png", SPIFFS, "/favicon.png");
   server.serveStatic("/Muli-Light.ttf", SPIFFS, "/Muli-Light.ttf");
   //server.serveStatic("/HelveticaMono.ttf", SPIFFS, "/HelveticaMono.ttf");

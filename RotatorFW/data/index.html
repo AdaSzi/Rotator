@@ -70,6 +70,7 @@
             transition: fill 0.5s ease-out 0s;
             fill: rgba(127, 127, 127, 0.5);
         }
+        
         .buttonrow button:active {
             background-color: rgba(127, 127, 127, 0.5);
         }
@@ -267,8 +268,8 @@
                 </svg>
 		</button>
 
-		<button id="btn-nightmode">
-			<svg class="btn_icon" version="1.1"
+		<button id="btn-movementIndicator">
+			<svg class="btn_icon" id="movementIndicator" version="1.1"
 				 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 				 width="512px" height="512px" viewBox="0 0 512 512" enable-background="new 0 0 512 512"
 				 xml:space="preserve">
@@ -515,8 +516,8 @@ class RotatorSocket {
 		this.socket = null;
 		this.messageTimeout = null;
 
-		//this.gateway = `ws://rotator.local/ws`;
-		this.gateway = `ws://${window.location.hostname}/ws`;
+		this.gateway = `ws://rotator.local/ws`;
+		//this.gateway = `ws://${window.location.hostname}/ws`;
 	}
 
 	setupWebSocket() {
@@ -571,7 +572,8 @@ class RotatorIndicator {
 
 		this.currentAzimuth = document.getElementById('currentAzimuth');
 		this.targetAzimuth = document.getElementById('targetAzimuth');
-		this.rotationSpeed = document.getElementById('rotationSpeed');
+		this.rotationSpeed = document.getElementById('rotationSpeed');    
+    this.movementIndicator = document.getElementById('movementIndicator');
 		this.azimuthInRoseDial = this.compassContainer.querySelector('.azimuth-label');
 
 		// this.compassContainer.addEventListener('click', this.handleMove.bind(this));
@@ -634,7 +636,7 @@ class RotatorIndicator {
 	}
 
 	_handleSocketMessage(data) {
-		if (data.current_position !== undefined && data.target_position !== undefined) {
+		if (data.current_position !== undefined && data.target_position !== undefined && data.current_speed !== undefined) {
 			this._handlePositionUpdate(data);
 		}
 	}
@@ -644,7 +646,17 @@ class RotatorIndicator {
 
 		this.currentAzimuth.textContent = current_position % 360 + '°';
 		this.targetAzimuth.textContent = target_position % 360 + '°';
-		this.rotationSpeed.textContent = current_speed + '°';
+		this.rotationSpeed.textContent = (current_speed / 255 * 100).toFixed(0) + '%';
+
+    if(current_speed === 0){
+      this.movementIndicator.querySelector('path').setAttribute('fill', 'rgba(0, 255, 0, 0.5)');
+    }
+    else {
+      this.movementIndicator.querySelector('path').setAttribute('fill', 'rgba(255, 0, 0, 1)');
+    
+    }
+    //document.getElementById('movementIndicator').fill = 'rgba(255, 0, 0, 1)'
+
 		this.azimuthInRoseDial.textContent = current_position % 360;
 
 		if (current_position !== this.oldCurrentPosition) {

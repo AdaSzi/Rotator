@@ -21,13 +21,14 @@ struct GlobalData {
     uint16_t currentAzimuth = 0;
     uint16_t targetAzimuth = 0;
     uint16_t currentSpeed = 0;
-    bool isMoving = false;
+    //bool isMoving = false;
 
     bool operator == (const GlobalData& other) const {
-        return currentAzimuth == other.currentAzimuth &&
-               targetAzimuth == other.targetAzimuth &&
-               currentSpeed == other.currentSpeed &&
-               isMoving == other.isMoving;
+        return currentAzimuth == other.currentAzimuth
+               && targetAzimuth == other.targetAzimuth
+               //&& currentSpeed == other.currentSpeed
+               //&& isMoving == other.isMoving
+               ;
     }
 
     bool operator != (const GlobalData& other) const {
