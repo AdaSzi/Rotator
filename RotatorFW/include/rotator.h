@@ -21,7 +21,7 @@ class Pot {
 
 class Motor {
     public:
-        Motor(uint8_t pwm, uint8_t cw, uint8_t ccw);
+        Motor(uint8_t pwm, uint8_t cw, uint8_t ccw, uint16_t* speedOutput);
 
         void handleMotor();
 
@@ -30,6 +30,7 @@ class Motor {
         void stop();
 
     private:
+        uint16_t* speedOutput;
         enum Color {STOP, RIGHT, LEFT};
         uint8_t status;
         unsigned long nextEnableTime = 0;
@@ -46,7 +47,7 @@ class Rotator {
         double controllerInput, controllerOutput, controllerSetpoint;
         
         //master vars
-        uint16_t *rotatorCurrentPosition, *rotatorMotorSpeed, *rotatorTargetPosition;
+        uint16_t *rotatorCurrentPosition, *rotatorTargetPosition;
 
     public:
         Rotator(uint8_t potPin, uint8_t pwmMotPin, uint8_t cwMotPin, uint8_t ccwMotPin, uint16_t* Input, uint16_t* Output, uint16_t* Setpoint);

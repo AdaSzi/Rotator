@@ -68,9 +68,8 @@
         }
         .buttonrow button svg * {
             transition: fill 0.5s ease-out 0s;
-            fill: rgba(127, 127, 127, 0.5);
+            /*fill: rgba(127, 127, 127, 0.5);*/
         }
-        
         .buttonrow button:active {
             background-color: rgba(127, 127, 127, 0.5);
         }
@@ -197,7 +196,7 @@
 </head>
 <body>
 <header>
-	<h1 id="rotatorTitle">Undefined Rotator</h1>
+	<h1 id="rotatorTitle">Unnamed Rotator</h1>
 </header>
 
 <div class="container">
@@ -516,8 +515,8 @@ class RotatorSocket {
 		this.socket = null;
 		this.messageTimeout = null;
 
-		this.gateway = `ws://rotator.local/ws`;
-		//this.gateway = `ws://${window.location.hostname}/ws`;
+		//this.gateway = `ws://rotator.local/ws`;
+		this.gateway = `ws://${window.location.hostname}/ws`;
 	}
 
 	setupWebSocket() {

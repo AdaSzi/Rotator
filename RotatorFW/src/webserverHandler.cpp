@@ -81,7 +81,7 @@ void handleWebServer() {
   static unsigned long nextClientsUpdateFast = 0;
   if (millis() > nextClientsUpdateHB) {    
     nextClientsUpdateHB = millis() + WEBSOCKET_UPDATE_INTERVAL;
-    notifyClients();    
+    notifyClients();
   }
 
   if (lastGlobalData != globalData && millis() > nextClientsUpdateFast) {    

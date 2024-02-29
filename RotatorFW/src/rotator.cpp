@@ -39,11 +39,12 @@ float Pot::getPosition() {
 }
 
 
-
-Motor::Motor(uint8_t pwm, uint8_t cw, uint8_t ccw) {
+//https://esp32.com/viewtopic.php?t=27518
+Motor::Motor(uint8_t pwm, uint8_t cw, uint8_t ccw, uint16_t* output) {
     pwmPin = pwm;
     cwPin = cw;
     ccwPin = ccw;
+    speedOutput = output;
 
     pinMode(cwPin, OUTPUT);
     pinMode(ccwPin, OUTPUT);
@@ -67,6 +68,7 @@ void Motor::right(uint8_t speed) {
         analogWrite(pwmPin, speed);
 
         status = RIGHT;
+        *speedOutput = speed;
 
         #ifdef DEBUG
             Serial.print("Motor R, speed: ");
@@ -81,9 +83,10 @@ void Motor::left(uint8_t speed) {
         digitalWrite(cwPin, LOW);
 
         digitalWrite(ccwPin, HIGH);
-        analogWrite(pwmPin, speed); 
+        analogWrite(pwmPin, speed);
 
         status = LEFT;
+        *speedOutput = speed;
 
         #ifdef DEBUG
             Serial.print("Motor L, speed: ");
@@ -102,6 +105,7 @@ void Motor::stop() {
     digitalWrite(pwmPin, LOW);
 
     status = STOP;
+    *speedOutput = 0;
 
     #ifdef DEBUG
         Serial.println("Motor stopped");
@@ -111,11 +115,11 @@ void Motor::stop() {
 
 
 Rotator::Rotator(uint8_t potPin, uint8_t pwmMotPin, uint8_t cwMotPin, uint8_t ccwMotPin, uint16_t* Input, uint16_t* Output, uint16_t* Setpoint): 
-    pot(potPin), motor(pwmMotPin, cwMotPin, ccwMotPin), 
-    pidController(&controllerInput, &controllerOutput, &controllerSetpoint, 100, 20, 0, P_ON_M, DIRECT) {
+    pot(potPin), 
+    motor(pwmMotPin, cwMotPin, ccwMotPin, Output),
+    pidController(&controllerInput, &controllerOutput, &controllerSetpoint, 50, 20, 0, P_ON_M, DIRECT) {
 
     rotatorCurrentPosition = Input;
-    rotatorMotorSpeed = Output;
     rotatorTargetPosition = Setpoint;
 
     controllerInput = pot.getPosition();
@@ -131,22 +135,18 @@ Rotator::Rotator(uint8_t potPin, uint8_t pwmMotPin, uint8_t cwMotPin, uint8_t cc
 void Rotator::handleRotator(){   
     pot.handlePot();
     *rotatorCurrentPosition = pot.getPosition();
-
     controllerInput = pot.getPosition();
 
     if(pidController.Compute()){
         if(abs(controllerOutput) < 100) {
-            *rotatorMotorSpeed = 0;
             motor.stop();
         } 
         else if(abs(*rotatorCurrentPosition - *rotatorTargetPosition) > 1){
             if(0 < controllerOutput) {
-                *rotatorMotorSpeed = abs(controllerOutput);
-                motor.right(*rotatorMotorSpeed);
+                motor.right(abs(controllerOutput));
             }
             else if(controllerOutput < 0){
-                *rotatorMotorSpeed = abs(controllerOutput);
-                motor.left(*rotatorMotorSpeed);
+                motor.left(abs(controllerOutput));
             }
         }
 
@@ -159,27 +159,17 @@ void Rotator::handleRotator(){
             Serial.println(controllerSetpoint);
         #endif
     }
-
-    //motor.handleMotor();
 }
 
 void Rotator::setTargetPosition(uint16_t target) {
-    //TODO select closest target
-
-    /*int16_t positiveDiff = target - currentPosition;
-    int16_t negativeDiff = currentPosition - target;
-
-    // Find the closest target
-    if (positiveDiff < negativeDiff) {
-        // Positive difference is smaller, set target directly
-        setpoint = target;
-    } else {
-        // Negative difference is smaller or equal, set the opposite direction target
-        setpoint = currentPosition - negativeDiff;
+    if(*rotatorTargetPosition == target && controllerSetpoint == target) 
+        return;
+    
+    uint16_t altTarget = (target + 360)%450;
+    
+    if(abs(*rotatorCurrentPosition - target) > abs(*rotatorCurrentPosition - altTarget)){
+    	target = altTarget;
     }
-
-    // Ensure setpoint is within the valid range (0 to 450)
-    setpoint = constrain(setpoint, 0, 450);*/
 
     *rotatorTargetPosition = target;
     controllerSetpoint = target;
