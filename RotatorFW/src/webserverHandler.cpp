@@ -36,6 +36,10 @@ void initWebServer(){
     request->send(200, "text/plain", String("Compiled: " __DATE__ " " __TIME__"\nCPU: " + String(ESP.getChipModel()) + "-" + String(ESP.getChipRevision()) + "\nUptime: " + String(days)+ " days, " + String(hours) + " hours, "+ String(minutes)+ " minutes and " + String(seconds)+ " seconds"));
   });
 
+  server.on("/config", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "text/plain", sharedConfigJson);
+  });
+
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
   //server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
   server.serveStatic("/favicon.png", SPIFFS, "/favicon.png");
