@@ -18,12 +18,8 @@ void initWebServer(){
   #ifdef DEBUG
     Serial.println("Starting Webserver");
   #endif
-  
-  server.on("/heap", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain", String("Free heap: " + String(ESP.getFreeHeap()) + " B"));
-  });
 
-  server.on("/info", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/status", HTTP_GET, [](AsyncWebServerRequest * request) {
     unsigned long currentMillis = millis();
     unsigned long seconds = currentMillis / 1000;
     unsigned long minutes = seconds / 60;
@@ -33,7 +29,7 @@ void initWebServer(){
     seconds %= 60;
     minutes %= 60;
     hours %= 24;
-    request->send(200, "text/plain", String("Compiled: " __DATE__ " " __TIME__"\nCPU: " + String(ESP.getChipModel()) + "-" + String(ESP.getChipRevision()) + "\nUptime: " + String(days)+ " days, " + String(hours) + " hours, "+ String(minutes)+ " minutes and " + String(seconds)+ " seconds"));
+    request->send(200, "text/plain", String("Compiled: " __DATE__ " " __TIME__"\nCPU: " + String(ESP.getChipModel()) + "-" + String(ESP.getChipRevision()) + "\nUptime: " + String(days)+ " days, " + String(hours) + " hours, " + String(minutes) + " minutes and " + String(seconds) + " seconds\n" + String("Free heap: " + String(ESP.getFreeHeap()) + " B")));
   });
 
   server.on("/config", HTTP_GET, [](AsyncWebServerRequest * request) {
