@@ -41,6 +41,9 @@ void initWebServer(){
   });
 
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+
+  //server.serveStatic("/js/compass_degrees.js", SPIFFS, "/js/compass_degrees.js");
+  //server.serveStatic("/js/main.js", SPIFFS, "/js/main.js");
   //server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
   server.serveStatic("/favicon.png", SPIFFS, "/favicon.png");
   server.serveStatic("/Muli-Light.ttf", SPIFFS, "/Muli-Light.ttf");

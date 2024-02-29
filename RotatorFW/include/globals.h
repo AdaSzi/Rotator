@@ -44,6 +44,5 @@ extern Rotator rotator;
 
 void ledBlink(uint16_t period);
 void restart();
-//extern bool shouldNotifyClients;
 
 #endif
