@@ -10,7 +10,7 @@ WiFiMulti WiFiMulti;
 void initWifi(){
     WiFi.mode(WIFI_STA);
     
-    for (JsonObject cfg : mainConfigDoc["wifi"].as<JsonArray>()) {
+    for (JsonObject cfg : wifiConfig["wifi"].as<JsonArray>()) {
         if (cfg["ssid"]) WiFiMulti.addAP(cfg["ssid"], cfg["password"]);
     }
 

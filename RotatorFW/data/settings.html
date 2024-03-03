@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 20px;
+        justify-content: center;
+        align-items: center;
+      }
+
+      form {
+        max-width: 400px;
+        margin: auto;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 16px;
+      }
+
+      button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px 5px 5px 0px;
+      }
+
+      .center {
+        margin: auto;
+        max-width: 400px;
+      }
+
+      button:hover {
+        color: white;
+        background-color: #45a049;
+      }
+
+      .redBtn {
+        color: white;
+        background-color: #ff5733;
+      }
+
+      .redBtn:hover {
+        background-color: #e5542e;
+      }
+
+      .greenBtn {
+        color: white;
+        background-color: #4caf50;
+      }
+
+      .greenBtn:hover {
+        background-color: #45a049;
+      }      
+
+      .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .popup.shown {
+            display: block;
+        }
+        .popup-inside {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #232428;
+            color: #eee;
+            line-height: 1.41;
+        }
+        .popup-contents {
+            padding: 1rem;
+        }
+        .popup-inner {
+            display: none;
+        }
+        .popup-inner.shown {
+            display: block;
+        }
+        .popup-close {
+            padding: 0.75rem 1rem;
+            text-align: right;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .popup-close:hover {
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
+    <title>Rotator WiFi Connection Setup</title>
+  </head>
+  <body>
+    <form id="wifiForm">
+      <h1>Rotator Setup</h1>
+      <div id="settings">
+        <h2>General settings</h2>
+        <div class="setting">
+          <label for="rotatorName">Rotator Name:</label>
+          <input id="rotatorName" type="text" name="rotatorName" title="Name of the Rotator. (eg. '20m Yagi')"/>
+        </div>
+        <div class="setting">
+          <label for="mDNS">Rotator mDNS domain:</label>
+          <input id="mDNS" type="text" name="mDNS" title="The domain which will be used to access the rotator interface. (eg. 'rotator20m')"/>
+        </div>
+      </div>
+      <button type="button" class="greenBtn" onclick="applySettings()" style="display: block">Save settings</button>
+      <p>Note that changes to mDNS domain name only apply after restart.</p><p>After you save your changes you can restart your rotator controller by going to <a href='/restart'>/restart</a>.</p>
+    </form>
+
+    
+    <div id="popup" class="popup">
+      <div class="popup-inside">
+        <div class="popup-contents">
+          <div class="popup-inner" data-handle="lostconnection">
+            <p>
+              Connection to rotator has been lost. Trying to reconnect.
+            </p>
+          </div>
+        </div>
+        <div class="popup-close">close</div>
+      </div>
+    </div>
+
+    <script>
+      const Eventable = {
+        emit(event, ...args) {
+          ((this.handlers || [])[event] || []).forEach(cb => cb(this, ...args));
+          return this;
+        },
+        on(event, cb) {
+          if (!this.handlers)
+            this.handlers = [];
+
+          (this.handlers[event] = this.handlers[event] || []).push(cb);
+          return this;
+        },
+      };
+
+      class RotatorSocket {
+        constructor(notifier) {
+          Object.assign(this, Eventable);
+
+          this.notifier = notifier;
+          this.socket = null;
+          this.messageTimeout = null;
+
+          //this.gateway = `ws://rotator.local/ws`;
+          this.gateway = `ws://${window.location.hostname}/ws`;
+        }
+
+        setupWebSocket() {
+          this.resetMessageTimeout();
+          this.socket = new WebSocket(this.gateway);
+
+          this.socket.onopen = () => {
+            console.log('WebSocket connection opened.');
+            this.notifier.popupClose();
+            this.resetMessageTimeout();
+          };
+
+          this.socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            this.emit('message', data);
+            this.resetMessageTimeout();
+          };
+        }
+
+        resetMessageTimeout() {
+          clearTimeout(this.messageTimeout);
+          this.messageTimeout = setTimeout(() => {
+            console.log('Connection timeout, closing and reconnecting...');
+            this.notifier.popupOpen("lostconnection");
+
+            this.socket.close();
+            this.setupWebSocket();
+          }, 10000);
+        }
+
+        send(data) {
+          this.socket.send(JSON.stringify(data));
+        }
+
+        isConnected() {
+          return this.socket && this.socket.readyState === WebSocket.OPEN;
+        }
+      }
+
+      class RotatorNotifier {
+        constructor() {
+          this.popup = document.getElementById('popup');
+          this.btnsPopup = document.querySelectorAll(".btn-popup");
+
+          for (const btn of this.btnsPopup) {
+            btn.addEventListener("click", event => {
+              this.popupOpen(event.currentTarget.dataset.name);
+            });
+          }
+
+          this.popup.addEventListener("click", event => {
+            if (!event.target.closest('.popup-contents')) {
+              this.popupClose();
+            }
+          });
+        }
+
+        popupOpen(name) {
+          const inner = this.popup.querySelector(`.popup-inner[data-handle="${name}"]`);
+          this.popup.querySelectorAll('.popup-inner').forEach(el => el.classList[el === inner ? 'add' : 'remove']('shown'));
+          if (inner)
+            this.popup.classList.add("shown");
+        }
+
+        popupClose() {
+          this.popup.classList.remove("shown");
+        }
+      }
+      const rotatorNotifier = new RotatorNotifier();
+      const webSocket = new RotatorSocket(rotatorNotifier);
+
+      function applySettings() {
+        const inputElements = document.querySelectorAll('#settings input[name]');
+
+        const settingsObject = {
+          settings: {}
+        };
+
+        inputElements.forEach(input => {
+          const settingName = input.name;
+          const settingValue = input.value;
+          settingsObject.settings[settingName] = settingValue;
+        });
+
+        webSocket.send(settingsObject);
+      }
+
+      async function updateHeader() {
+        const response = await fetch(`http://${window.location.hostname}/config`);
+        const data = await response.json();
+        
+        if (data.settings.rotatorName) {
+            document.getElementById('rotatorName').value = data.settings.rotatorName;
+            document.getElementById('mDNS').value = data.settings.mDNS;
+          }
+        }
+        
+      updateHeader();
+
+      webSocket.setupWebSocket();
+    </script>
+  </body>
+</html>

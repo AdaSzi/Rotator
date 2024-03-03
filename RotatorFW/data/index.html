@@ -307,6 +307,7 @@
 			<div class="popup-inner" data-handle="info">
 				<p>This is the antenna rotator interface for <a href='https://om3kff.sk'>OM3KFF</a>.</p>
 				<p>See the <a href='/status'>status page</a> for info about this controller.</p>
+				<p>You can change the settings in the <a href='/settings'>settings page</a>.</p>
 				<p>This project's GUI is based on <a href='https://github.com/lamplightdev/compass'>Chris Haynes'
 					work</a>.</p>
 			</div>
@@ -572,7 +573,7 @@ class RotatorIndicator {
 		this.currentAzimuth = document.getElementById('currentAzimuth');
 		this.targetAzimuth = document.getElementById('targetAzimuth');
 		this.rotationSpeed = document.getElementById('rotationSpeed');    
-    this.movementIndicator = document.getElementById('movementIndicator');
+    	this.movementIndicator = document.getElementById('movementIndicator');
 		this.azimuthInRoseDial = this.compassContainer.querySelector('.azimuth-label');
 
 		// this.compassContainer.addEventListener('click', this.handleMove.bind(this));
@@ -718,13 +719,14 @@ const renderCompass = svg => {
 }
 
 async function updateHeader() {
-	const response = await fetch(`http://${window.location.hostname}/config`);
-	const data = await response.json();
-	if (data.deviceName) {
-		document.getElementById('rotatorTitle').innerText = data.deviceName;
-		document.title = data.deviceName;
-	}
+    const response = await fetch(`http://${window.location.hostname}/config`);
+    const data = await response.json();
+    if (data.settings.rotatorName) {
+        document.getElementById('rotatorTitle').innerText = data.settings.rotatorName;
+        document.title = data.settings.rotatorName;
+    }
 }
+
 
 renderCompass(document.querySelector('.compass_rose_dial'));
 updateHeader();

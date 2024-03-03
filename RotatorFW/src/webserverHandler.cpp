@@ -13,6 +13,7 @@
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 GlobalData lastGlobalData;
+String domain;
 
 void initWebServer(){  
   #ifdef DEBUG
@@ -33,10 +34,29 @@ void initWebServer(){
   });
 
   server.on("/config", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain", sharedConfigJson);
+    request->send(200, "application/json", mainConfigDocString);
+  });
+
+  server.on("/restart", HTTP_GET, [](AsyncWebServerRequest * request) {
+    #ifdef DEBUG
+      Serial.print("Domain: ");
+      Serial.println(domain);
+    #endif
+
+    String html = F("<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"30;url=http://");
+    html += domain;
+    html += F(".local\"></head><body><h2>Restarting</h2><p>You will be redirected to <a href='");
+    html += domain;
+    html += F(".local'>");
+    html += domain;    
+    html += F(".local</a> shortly.</p><p>Timing has been set to 30 seconds to leave enough time for your rotator controller to reboot and reconnect to wifi.</p></body></html>");
+    
+    request->send(200, "text/html", html);
+    restart();
   });
 
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+  server.serveStatic("/settings", SPIFFS, "settings.html");
 
   //server.serveStatic("/js/compass_degrees.js", SPIFFS, "/js/compass_degrees.js");
   //server.serveStatic("/js/main.js", SPIFFS, "/js/main.js");
@@ -55,7 +75,8 @@ void initWebServer(){
   #ifdef DEBUG
     Serial.println("Starting mDNS");  
   #endif
-  if (!MDNS.begin("rotator")) {
+  domain = mainConfigDoc["settings"]["mDNS"]|"rotator";
+  if (!MDNS.begin(domain)) {
     #ifdef DEBUG
       Serial.println("Error setting up MDNS responder!");
     #endif
@@ -100,8 +121,8 @@ void handleWebServer() {
     static unsigned long mpsTimer = 0;
     if (millis() > mpsTimer) {    
       mpsTimer = millis() + 1000;
-      Serial.print("MPS: ");
-      Serial.println(mps);
+      //Serial.print("MPS: ");
+      //Serial.println(mps);
       mps=0;
     }
   #endif
@@ -119,18 +140,36 @@ void notifyClients() {
   }
 }
 
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, AsyncWebSocketClient *client) {
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
   #ifdef DEBUG
-    //Serial.println((char*)data);
+    Serial.println((char*)data);
   #endif
   
-  StaticJsonDocument<128> tempDoc;
+  StaticJsonDocument<8192> tempDoc;
   deserializeJson(tempDoc, (char*)data);
-
-  rotator.setTargetPosition(tempDoc["target_position"]);
-  notifyClients();
   
+
+  #ifdef DEBUG
+    Serial.println("Got data:");
+    serializeJsonPretty(tempDoc, Serial);
+  #endif
+
+  if(tempDoc.containsKey("target_position")){
+    rotator.setTargetPosition(tempDoc["target_position"]);
+    notifyClients();
+  }
+  else if(tempDoc.containsKey("settings")){
+    mainConfigDoc = tempDoc;
+    saveConfig(mainConfigDoc, "/config.json");
+    serializeJson(mainConfigDoc, mainConfigDocString);
+    domain = mainConfigDoc["settings"]["mDNS"].as<String>();
+    
+  #ifdef DEBUG
+    Serial.print("Domain:");
+    Serial.println(domain);
+  #endif
+  }  
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
@@ -147,7 +186,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
       #endif
       break;
     case WS_EVT_DATA:
-      handleWebSocketMessage(arg, data, len);
+      handleWebSocketMessage(arg, data, len, client);
       break;
     case WS_EVT_PONG:
     case WS_EVT_ERROR:
@@ -173,7 +212,7 @@ public:
   }
 
   void handleRequest(AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/setup.html", "text/html");
+    request->send(SPIFFS, "/wifisetup.html", "text/html");
     #ifdef DEBUG
       Serial.println("Served Setup");
     #endif
@@ -204,7 +243,7 @@ void setupMode(){
 }
 
 void notifyClientsInSetupMode(){
-  DynamicJsonDocument copyDoc = mainConfigDoc;
+  DynamicJsonDocument copyDoc = wifiConfig;
   for (JsonObject wifi : copyDoc["wifi"].as<JsonArray>()) {
     wifi.remove("password");
   }
@@ -231,14 +270,14 @@ void notifyClientsInSetupMode(){
     case WS_EVT_DATA:{
         AwsFrameInfo *info = (AwsFrameInfo*)arg;
 
-        deserializeJson(mainConfigDoc, (char*)data);
+        deserializeJson(wifiConfig, (char*)data);
 
         #ifdef DEBUG
-          Serial.println(F("\nConfig saving:"));
-          serializeJsonPretty(mainConfigDoc, Serial);
+          Serial.println(F("\nWiFiConfig saving:"));
+          serializeJsonPretty(wifiConfig, Serial);
         #endif
 
-        saveConfig();
+        saveConfig(wifiConfig, "/WiFiConfig.json");
         notifyClientsInSetupMode();
         restart();
       }

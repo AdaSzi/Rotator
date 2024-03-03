@@ -12,7 +12,7 @@ class Pot {
         float getPosition();
         
     private:
-        uint8_t pin;
+        uint8_t potPin;
         float position, filterValue;
 
         void initFilter();
@@ -21,7 +21,7 @@ class Pot {
 
 class Motor {
     public:
-        Motor(uint8_t pwm, uint8_t cw, uint8_t ccw, uint16_t* speedOutput);
+        Motor(uint8_t pwmPin, uint8_t cwPin, uint8_t ccwPin, uint16_t* speedOutput);
 
         void handleMotor();
 
@@ -47,7 +47,7 @@ class Rotator {
         double controllerInput, controllerOutput, controllerSetpoint;
         
         //master vars
-        uint16_t *rotatorCurrentPosition, *rotatorTargetPosition;
+        uint16_t *rotatorCurrentPosition, *rotatorSetpoint;
 
     public:
         Rotator(uint8_t potPin, uint8_t pwmMotPin, uint8_t cwMotPin, uint8_t ccwMotPin, uint16_t* Input, uint16_t* Output, uint16_t* Setpoint);
