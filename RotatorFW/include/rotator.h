@@ -8,12 +8,14 @@ class Pot {
     public:
         Pot(uint8_t potPin);
 
+        void initPot(uint16_t potMin, uint16_t potMax);
         void handlePot();
         float getPosition();
+        float getPositionRaw();
         
     private:
         uint8_t potPin;
-        float position, filterValue;
+        float position, positionRaw, filterValue, potMin, potMax;
 
         void initFilter();
         float lowPassFilter(uint16_t inputValue, float coefficient);
@@ -31,13 +33,21 @@ class Motor {
 
     private:
         uint16_t* speedOutput;
-        enum Color {STOP, RIGHT, LEFT};
+        enum Status {STOP, RIGHT, LEFT};
         uint8_t status;
         unsigned long nextEnableTime = 0;
         uint8_t pwmPin, cwPin, ccwPin;
 };
 
 class Rotator {
+    public:
+        Rotator(uint8_t potPin, uint8_t pwmMotPin, uint8_t cwMotPin, uint8_t ccwMotPin, uint16_t* Input, uint16_t* Output, uint16_t* Setpoint);
+
+        void initRotator(uint16_t potMin, uint16_t potMax);
+        void handleRotator();
+        void setTargetPosition(uint16_t target);
+        void calibrate();
+
     private:
         Motor motor;
         Pot pot;
@@ -49,11 +59,10 @@ class Rotator {
         //master vars
         uint16_t *rotatorCurrentPosition, *rotatorSetpoint;
 
-    public:
-        Rotator(uint8_t potPin, uint8_t pwmMotPin, uint8_t cwMotPin, uint8_t ccwMotPin, uint16_t* Input, uint16_t* Output, uint16_t* Setpoint);
+        
+        enum Mode {CALIBRATION, NORMAL};
+        uint8_t mode, calibrationStep;
+        void calibrationMode();
 
-        void handleRotator();
-        void setTargetPosition(uint16_t target);
-        bool isMoving();
 };
 #endif

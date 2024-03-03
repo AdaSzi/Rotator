@@ -29,6 +29,8 @@ void setup() {
   if(!initStorage()){
     setupMode();
   }
+
+  rotator.initRotator(mainConfigDoc["settings"]["potMin"], mainConfigDoc["settings"]["potMax"]);
   initWifi();
 
   initWebServer();

@@ -1,23 +1,34 @@
 #include "rotator.h"
 #include "Arduino.h"
-
+#include "globals.h"
+#include "storage.h"
 
 Pot::Pot(uint8_t potPin) {
     this->potPin = potPin;
+    this->potMin = 0;
+    this->potMax = 0;
 
     //0V - 2.9V -> 0 - 4096
     pinMode(this->potPin, INPUT);
     
 
+}
+
+void Pot::initPot(uint16_t potMin, uint16_t potMax){
+    this->potMin = potMin;
+    this->potMax = potMax;
     initFilter();
 }
 
 void Pot::handlePot() {
     static unsigned long nextUpdate = 0;
-    if (millis() > nextUpdate) {   
+    if (millis() > nextUpdate) {
         nextUpdate = millis() + 50;
 
-        this->position = map(lowPassFilter(analogRead(potPin), 0.1), 0, 4096, 0, 360 + 90);
+        this->positionRaw = lowPassFilter(analogRead(potPin), 0.1);
+
+        if(this->potMin == this->potMax) return; //the pot is not calibrated
+        this->position = map(this->positionRaw, this->potMin, this->potMax, 0, 360 + 90);
 
         #ifdef DEBUG
             //Serial.println(globalData.currentAzimuth);
@@ -26,7 +37,8 @@ void Pot::handlePot() {
 }
 
 void Pot::initFilter() {
-    this->position = map(lowPassFilter(analogRead(potPin), 1), 0, 4096, 0, 360 + 90);
+    this->positionRaw = lowPassFilter(analogRead(potPin), 1);
+    this->position = map(this->positionRaw, this->potMin, this->potMax, 0, 360 + 90);
 }
 
 float Pot::lowPassFilter(uint16_t inputValue, float coefficient) {
@@ -35,7 +47,11 @@ float Pot::lowPassFilter(uint16_t inputValue, float coefficient) {
 }
 
 float Pot::getPosition() {
-    return position;
+    return this->position;
+}
+
+float Pot::getPositionRaw() {
+    return this->positionRaw;
 }
 
 
@@ -118,6 +134,8 @@ Rotator::Rotator(uint8_t potPin, uint8_t pwmMotPin, uint8_t cwMotPin, uint8_t cc
     pot(potPin), 
     motor(pwmMotPin, cwMotPin, ccwMotPin, Output),
     pidController(&this->controllerInput, &this->controllerOutput, &this->controllerSetpoint, 50, 20, 0, P_ON_M, DIRECT) {
+    
+    this->mode = NORMAL;
 
     this->rotatorCurrentPosition = rotatorCurrentPositionInput;
     this->rotatorSetpoint = rotatorSetpoint;
@@ -129,6 +147,11 @@ Rotator::Rotator(uint8_t potPin, uint8_t pwmMotPin, uint8_t cwMotPin, uint8_t cc
     *this->rotatorSetpoint = pot.getPosition();
 
     this->pidController.SetOutputLimits(-255, 255);
+    this->pidController.SetMode(MANUAL);
+}
+
+void Rotator::initRotator(uint16_t potMin, uint16_t potMax){
+    pot.initPot(potMin, potMax);
     this->pidController.SetMode(AUTOMATIC);
 }
 
@@ -158,6 +181,82 @@ void Rotator::handleRotator(){
             Serial.print(", ");
             Serial.println(this->controllerSetpoint);*/
         #endif
+    }
+
+    if(this->mode == CALIBRATION) calibrationMode();
+}
+
+void Rotator::calibrate(){
+    this->mode = CALIBRATION;
+    this->calibrationStep = 0;
+    this->pidController.SetMode(MANUAL);
+
+    #ifdef DEBUG
+        Serial.println("Entering calibration mode");
+    #endif
+}
+
+void Rotator::calibrationMode(){
+    static unsigned long nextUpdate = 0;
+    static uint16_t minPotPosRaw, maxPotPosRaw;
+    if(calibrationStep == 0) this->motor.left(255);
+    if(calibrationStep == 1) this->motor.right(255);
+    if(calibrationStep == 2) this->motor.stop();
+
+    if (millis() > nextUpdate) {   
+        nextUpdate = millis() + 1100;
+
+        if(calibrationStep == 0){
+            static uint16_t lastPositionMin = 65535;
+
+            if(lastPositionMin != (uint16_t)pot.getPositionRaw()){
+                lastPositionMin = pot.getPositionRaw();
+            }
+            else {
+                #ifdef DEBUG
+                    Serial.print("Reached 0 position: ");
+                    Serial.println(lastPositionMin);
+                #endif                
+                minPotPosRaw = lastPositionMin;
+                calibrationStep++;
+            }
+        }
+
+        else if(calibrationStep == 1){
+            static uint16_t lastPositionMax = 65535;
+
+            if(lastPositionMax != (uint16_t)pot.getPositionRaw()){
+                lastPositionMax = pot.getPositionRaw();
+            }
+            else {
+                #ifdef DEBUG
+                    Serial.print("Reached 100% position: ");
+                    Serial.println(lastPositionMax);
+                #endif                
+                maxPotPosRaw = lastPositionMax;
+                calibrationStep++;
+            }
+        }
+
+        else if(calibrationStep == 2){            
+            #ifdef DEBUG
+                Serial.println("End-stops calibration end: ");
+                Serial.println(minPotPosRaw);
+                Serial.println(maxPotPosRaw);
+            #endif
+
+            mainConfigDoc["settings"]["potMin"] = minPotPosRaw;            
+            mainConfigDoc["settings"]["potMax"] = maxPotPosRaw;  
+            pot.initPot(minPotPosRaw, maxPotPosRaw); 
+            
+            saveConfig(mainConfigDoc, "/config.json");
+            serializeJson(mainConfigDoc, mainConfigDocString);
+
+            this->setTargetPosition(360);
+
+            this->mode = NORMAL;
+            this->pidController.SetMode(AUTOMATIC);
+        }
     }
 }
 

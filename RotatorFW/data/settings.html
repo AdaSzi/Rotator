@@ -124,6 +124,7 @@
       </div>
       <button type="button" class="greenBtn" onclick="applySettings()" style="display: block">Save settings</button>
       <p>Note that changes to mDNS domain name only apply after restart.</p><p>After you save your changes you can restart your rotator controller by going to <a href='/restart'>/restart</a>.</p>
+      <p>The rotator has to be calibrated or it will not work. The calibration consists of rotating the rotator all the way to left and then all the way to the right. Calibration is finished when the indicator on the <a href='/'>main screen</a> starts to work and it cannot be stopped. You can initiate the calibration of your rotator end-stops here: <a href='/calibrate'>/calibrate</a>.</p>
     </form>
 
     
@@ -235,6 +236,7 @@
       }
       const rotatorNotifier = new RotatorNotifier();
       const webSocket = new RotatorSocket(rotatorNotifier);
+      var data;
 
       function applySettings() {
         const inputElements = document.querySelectorAll('#settings input[name]');
@@ -249,12 +251,15 @@
           settingsObject.settings[settingName] = settingValue;
         });
 
+        if (data.settings.potMin) settingsObject.settings.potMin = data.settings.potMin;
+        if (data.settings.potMax) settingsObject.settings.potMax = data.settings.potMax;
+
         webSocket.send(settingsObject);
       }
 
       async function updateHeader() {
         const response = await fetch(`http://${window.location.hostname}/config`);
-        const data = await response.json();
+        data = await response.json();
         
         if (data.settings.rotatorName) {
             document.getElementById('rotatorName').value = data.settings.rotatorName;
