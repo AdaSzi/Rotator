@@ -48,7 +48,6 @@ bool initStorage(){
       Serial.println(mainConfigDocString);
     #endif
 
-
     }
   }
 

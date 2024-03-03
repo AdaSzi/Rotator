@@ -37,8 +37,8 @@ struct GlobalData {
 };
 
 extern GlobalData globalData;
-extern StaticJsonDocument<8192> wifiConfig;
-extern StaticJsonDocument<8192> mainConfigDoc;
+extern DynamicJsonDocument wifiConfig;
+extern DynamicJsonDocument mainConfigDoc;
 extern char mainConfigDocString[8192];
 
 extern Rotator rotator;

@@ -13,6 +13,7 @@
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 GlobalData lastGlobalData;
+String domain;
 
 void initWebServer(){  
   #ifdef DEBUG
@@ -36,6 +37,24 @@ void initWebServer(){
     request->send(200, "application/json", mainConfigDocString);
   });
 
+  server.on("/restart", HTTP_GET, [](AsyncWebServerRequest * request) {
+    #ifdef DEBUG
+      Serial.print("Domain: ");
+      Serial.println(domain);
+    #endif
+
+    String html = F("<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"30;url=http://");
+    html += domain;
+    html += F(".local\"></head><body><h2>Restarting</h2><p>You will be redirected to <a href='");
+    html += domain;
+    html += F(".local'>");
+    html += domain;    
+    html += F(".local</a> shortly.</p><p>Timing has been set to 30 seconds to leave enough time for your rotator controller to reboot and reconnect to wifi.</p></body></html>");
+    
+    request->send(200, "text/html", html);
+    restart();
+  });
+
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
   server.serveStatic("/settings", SPIFFS, "settings.html");
 
@@ -56,7 +75,8 @@ void initWebServer(){
   #ifdef DEBUG
     Serial.println("Starting mDNS");  
   #endif
-  if (!MDNS.begin(mainConfigDoc["settings"]["mDNS"]|"rotator")) {
+  domain = mainConfigDoc["settings"]["mDNS"]|"rotator";
+  if (!MDNS.begin(domain)) {
     #ifdef DEBUG
       Serial.println("Error setting up MDNS responder!");
     #endif
@@ -143,6 +163,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, AsyncWebSocket
     mainConfigDoc = tempDoc;
     saveConfig(mainConfigDoc, "/config.json");
     serializeJson(mainConfigDoc, mainConfigDocString);
+    domain = mainConfigDoc["settings"]["mDNS"].as<String>();
+    
+  #ifdef DEBUG
+    Serial.print("Domain:");
+    Serial.println(domain);
+  #endif
   }  
 }
 

@@ -2,8 +2,8 @@
 #include <ArduinoJson.h>
 
 GlobalData globalData;
-StaticJsonDocument<8192> wifiConfig;
-StaticJsonDocument<8192> mainConfigDoc;
+DynamicJsonDocument wifiConfig(8192);
+DynamicJsonDocument mainConfigDoc(8192);
 char mainConfigDocString[8192];
 
 Rotator rotator = Rotator(ROTATOR_POT_PIN, ROTATOR_MOTOR_PWM_PIN, ROTATOR_MOTOR_CW_PIN, ROTATOR_MOTOR_CCW_PIN, &globalData.currentAzimuth, &globalData.currentSpeed, &globalData.targetAzimuth);

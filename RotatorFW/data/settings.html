@@ -111,7 +111,6 @@
   <body>
     <form id="wifiForm">
       <h1>Rotator Setup</h1>
-      <p>Sample Text.</p>
       <div id="settings">
         <h2>General settings</h2>
         <div class="setting">
@@ -123,7 +122,8 @@
           <input id="mDNS" type="text" name="mDNS" title="The domain which will be used to access the rotator interface. (eg. 'rotator20m')"/>
         </div>
       </div>
-      <button type="button" class="greenBtn" onclick="applySettings()" style="display: block">Apply settings</button>
+      <button type="button" class="greenBtn" onclick="applySettings()" style="display: block">Save settings</button>
+      <p>Note that changes to mDNS domain name only apply after restart.</p><p>After you save your changes you can restart your rotator controller by going to <a href='/restart'>/restart</a>.</p>
     </form>
 
     
