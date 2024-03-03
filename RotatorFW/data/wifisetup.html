@@ -68,15 +68,12 @@
         background-color: #45a049;
       }
     </style>
-    <title>WiFi Configuration Form</title>
+    <title>Rotator WiFi Connection Setup</title>
   </head>
   <body>
     <form id="wifiForm">
-      <h1>Rotator Setup</h1>
-
-      <label for="deviceName">Device Name:</label>
-      <input type="text" id="deviceName" name="deviceName" />
-
+      <h1>Rotator WiFi Connection Setup</h1>
+      <p>Input as many WiFi names and passwords as you wish. Then press "Owerwrite save and Restart". Your Rotator Controller will then restart and connect to one of the WiFis you have set. When that happens, the LED on the device will start to blink once a second. Go to <a href="http://rotator.local/settings">rotator.local/settings</a> where you will continue the setup process.</p>
       <div id="wifiConfigs">
         <div class="wifiConfig">
           <label for="wifiSSID">WiFi SSID:</label>
@@ -189,14 +186,8 @@
       }
 
       function prepareJson() {
-        var deviceName = document.getElementById("deviceName").value;
         var wifiConfigElements = document.querySelectorAll(".wifiConfig");
         var wifiConfigs = [];
-
-        if (!deviceName) {
-          alert("Please fill in the Device Name.");
-          return;
-        }
 
         wifiConfigElements.forEach(function (configElement) {
           var wifiSSID = configElement.querySelector('[name="wifiSSID"]').value;
@@ -222,7 +213,7 @@
           return;
         }
         socket.send(
-          JSON.stringify({ deviceName: deviceName, wifi: wifiConfigs })
+          JSON.stringify({wifi: wifiConfigs })
         );
       }
     </script>

@@ -52,11 +52,12 @@ void checkButton() {
     if (!buttonHeld) {
       buttonStartTime = millis();
       buttonHeld = true;
-    } 
+    }
     else {
       unsigned long currentTime = millis();
       if (currentTime - buttonStartTime >= BUTTON_HOLD_RESET_TIME) {
-        deleteConfig();
+        deleteConfig("/config.json");
+        deleteConfig("/WiFiConfig.json");
         restart();
         buttonHeld = false;
       }

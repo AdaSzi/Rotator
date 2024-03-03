@@ -4,8 +4,8 @@
 #include "FS.h"
 
 bool initStorage();
-void saveConfig();
-void deleteConfig();
+void saveConfig(const JsonDocument& json, char* fileName);
+void deleteConfig(char* fileName);
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
 
 #endif

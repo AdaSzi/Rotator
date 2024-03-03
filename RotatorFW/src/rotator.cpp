@@ -26,7 +26,7 @@ void Pot::handlePot() {
 }
 
 void Pot::initFilter() {
-    this->position = map(lowPassFilter(analogRead(pin), 1), 0, 4096, 0, 360 + 90);
+    this->position = map(lowPassFilter(analogRead(potPin), 1), 0, 4096, 0, 360 + 90);
 }
 
 float Pot::lowPassFilter(uint16_t inputValue, float coefficient) {
@@ -52,7 +52,7 @@ Motor::Motor(uint8_t pwmPin, uint8_t cwPin, uint8_t ccwPin, uint16_t* speedOutpu
     stop();
 
     #ifdef DEBUG
-        Serial.println("Motor started");
+        //Serial.println("Motor started");
     #endif
 }
 
@@ -71,8 +71,8 @@ void Motor::right(uint8_t speed) {
         *this->speedOutput = speed;
 
         #ifdef DEBUG
-            Serial.print("Motor R, speed: ");
-            Serial.println(speed);
+            //Serial.print("Motor R, speed: ");
+            //Serial.println(speed);
         #endif
     }
     else stop();
@@ -89,8 +89,8 @@ void Motor::left(uint8_t speed) {
         *this->speedOutput = speed;
 
         #ifdef DEBUG
-            Serial.print("Motor L, speed: ");
-            Serial.println(speed);
+            //Serial.print("Motor L, speed: ");
+            //Serial.println(speed);
         #endif  
     }
     else stop();
@@ -108,7 +108,7 @@ void Motor::stop() {
     *this->speedOutput = 0;
 
     #ifdef DEBUG
-        Serial.println("Motor stopped");
+        //Serial.println("Motor stopped");
     #endif
 }
 
@@ -151,18 +151,18 @@ void Rotator::handleRotator(){
         }
 
         #ifdef DEBUG
-            Serial.println("Controller data: ");
+            /*Serial.println("Controller data: ");
             Serial.print(this->controllerInput);
             Serial.print(", ");
             Serial.print(this->controllerOutput);
             Serial.print(", ");
-            Serial.println(this->controllerSetpoint);
+            Serial.println(this->controllerSetpoint);*/
         #endif
     }
 }
 
 void Rotator::setTargetPosition(uint16_t target) {
-    //if(*rotatorTargetPosition == target && controllerSetpoint == target) return;
+    //if(*rotatorSetpoint == target && controllerSetpoint == target) return;
     
     uint16_t altTarget = (target + 360)%450;    
     if(abs(*this->rotatorCurrentPosition - target) > abs(*this->rotatorCurrentPosition - altTarget)){
@@ -175,7 +175,7 @@ void Rotator::setTargetPosition(uint16_t target) {
     
     #ifdef DEBUG
         Serial.print("Target set to: ");
-        Serial.println(*this->rotatorTargetPosition);
+        Serial.println(*this->rotatorSetpoint);
     #endif
 
 }
