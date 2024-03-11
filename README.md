@@ -9,6 +9,7 @@ Designed for Radioclub Omega ([OM3KFF](https://www.om3kff.sk))
 ![Screenshot of GUI.](GUI.png)
 
 # TO-DO
+- [ ] Show number of connected users,
 - [ ] Second axis for satellite work,
 - [ ] Multiple rotator autofind support,
 - [x] User lock controls,
