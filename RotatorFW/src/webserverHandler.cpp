@@ -37,6 +37,11 @@ void initWebServer(){
     request->send(200, "application/json", mainConfigDocString);
   });
 
+  server.on("/calibrate", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(204, "text/plain","");
+    rotator.calibrate();
+  });
+
   server.on("/restart", HTTP_GET, [](AsyncWebServerRequest * request) {
     #ifdef DEBUG
       Serial.print("Domain: ");
@@ -171,6 +176,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, AsyncWebSocket
 #endif
     }
     domain = mainConfigDoc["settings"]["mDNS"].as<String>();
+    applyLiveSettings();
     
   #ifdef DEBUG
     Serial.print("Domain:");
@@ -205,8 +211,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 
 
-
-
+//SetupMode
 DNSServer dnsServer;
 
 class CaptiveRequestHandler : public AsyncWebHandler {

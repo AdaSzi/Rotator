@@ -29,6 +29,8 @@ void setup() {
   if(!initStorage()){
     setupMode();
   }
+
+  applyLiveSettings();
   initWifi();
 
   initWebServer();
