@@ -10,8 +10,11 @@ Designed for Radioclub Omega ([OM3KFF](https://www.om3kff.sk))
 
 # TO-DO
 - [ ] Show number of connected users,
-- [ ] Second axis for satellite work,
+- [ ] Hardware
+- [ ] Use weather data to rotate antenna against wind if no users are connected,
 - [ ] Multiple rotator autofind support,
+- [ ] OTA update
+- [ ] Second axis for satellite work,
 - [x] User lock controls,
 - [x] End-stop calibration,
 - [x] User-friendly initial setup
