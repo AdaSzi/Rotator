@@ -499,6 +499,11 @@ async function updateHeader() {
 renderCompass(document.querySelector('.compass_rose_dial'));
 updateHeader();
 
+rotatorSocket.on('message', (_this, msg) => {
+	if (msg.settings) {
+		location.reload();
+	}
+});
 
 }());
 </script>

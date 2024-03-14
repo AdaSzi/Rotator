@@ -172,7 +172,7 @@
 		});
 	});
 
-	async function updateHeader() {
+	async function updateFields() {
 		const response = await fetch(`http://${window.location.hostname}/config`);
 		const data = await response.json();
 
@@ -186,9 +186,14 @@
 		}
 	}
 
-	updateHeader();
+	updateFields();
 
 	webSocket.setupWebSocket();
+	webSocket.on('message', (_this, msg) => {
+		if (msg.settings) {
+			updateFields();
+		}
+	});
 </script>
 </body>
 </html>
