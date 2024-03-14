@@ -43,6 +43,7 @@ extern char mainConfigDocString[8192];
 
 extern Rotator rotator;
 
+void applyLiveSettings();
 void ledBlink(uint16_t period);
 void restart();
 

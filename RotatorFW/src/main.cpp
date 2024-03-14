@@ -30,7 +30,7 @@ void setup() {
     setupMode();
   }
 
-  rotator.initRotator(mainConfigDoc["settings"]["potMin"], mainConfigDoc["settings"]["potMax"]);
+  applyLiveSettings();
   initWifi();
 
   initWebServer();

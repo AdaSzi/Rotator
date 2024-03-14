@@ -129,7 +129,6 @@ void Motor::stop() {
 }
 
 
-
 Rotator::Rotator(uint8_t potPin, uint8_t pwmMotPin, uint8_t cwMotPin, uint8_t ccwMotPin, uint16_t* rotatorCurrentPositionInput, uint16_t* Output, uint16_t* rotatorSetpoint): 
     pot(potPin), 
     motor(pwmMotPin, cwMotPin, ccwMotPin, Output),
@@ -150,7 +149,9 @@ Rotator::Rotator(uint8_t potPin, uint8_t pwmMotPin, uint8_t cwMotPin, uint8_t cc
     this->pidController.SetMode(MANUAL);
 }
 
-void Rotator::initRotator(uint16_t potMin, uint16_t potMax){
+void Rotator::initRotator(uint16_t rotatorAzimuthOffset, uint16_t rotatorAngleRange, uint16_t potMin, uint16_t potMax){
+    this->rotatorAzimuthOffset = rotatorAzimuthOffset;
+    this->rotatorAngleRange = rotatorAngleRange;
     pot.initPot(potMin, potMax);
     this->pidController.SetMode(AUTOMATIC);
 }
@@ -260,21 +261,36 @@ void Rotator::calibrationMode(){
     }
 }
 
-void Rotator::setTargetPosition(uint16_t target) {
-    //if(*rotatorSetpoint == target && controllerSetpoint == target) return;
-    
-    uint16_t altTarget = (target + 360)%450;    
-    if(abs(*this->rotatorCurrentPosition - target) > abs(*this->rotatorCurrentPosition - altTarget)){
-    	target = altTarget;
-    }
+inline uint16_t Rotator::rotatorAzimuthApplyOffset(uint16_t input) {
+	// sensed 0 - max
+	// out 0 - 359
+	return (this->rotatorAzimuthOffset + input) % 360;
+}
 
-    *this->rotatorSetpoint = target;
-    this->controllerSetpoint = target;
-
+void Rotator::setTargetPosition(uint16_t newTarget) {
+	// target 0 - 359
+	newTarget += 360;
     
+	uint16_t sourceA = rotatorAzimuthApplyOffset(*this->rotatorCurrentPosition);
+	int16_t diff = newTarget - sourceA;
+	diff = (diff + 180) % 360 - 180;
+
+	int16_t finalPos = *this->rotatorCurrentPosition + diff;
+
+	if (finalPos < 0) {
+		diff += 360;
+	}
+
+	if (finalPos > this->rotatorAngleRange) {
+		diff -= 360;
+	}
+
+
+    *this->rotatorSetpoint = diff;
+    this->controllerSetpoint = diff;
+
     #ifdef DEBUG
         Serial.print("Target set to: ");
         Serial.println(*this->rotatorSetpoint);
     #endif
-
 }
