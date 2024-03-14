@@ -57,6 +57,7 @@ void initWebServer(){
 
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
   server.serveStatic("/settings", SPIFFS, "settings.html");
+  server.serveStatic("/common", SPIFFS, "common.js");
 
   //server.serveStatic("/js/compass_degrees.js", SPIFFS, "/js/compass_degrees.js");
   //server.serveStatic("/js/main.js", SPIFFS, "/js/main.js");
