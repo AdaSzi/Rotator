@@ -62,6 +62,7 @@ void initWebServer(){
 
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
   server.serveStatic("/settings", SPIFFS, "settings.html");
+  server.serveStatic("/common", SPIFFS, "common.js");
 
   //server.serveStatic("/js/compass_degrees.js", SPIFFS, "/js/compass_degrees.js");
   //server.serveStatic("/js/main.js", SPIFFS, "/js/main.js");
@@ -168,6 +169,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, AsyncWebSocket
     mainConfigDoc = tempDoc;
     saveConfig(mainConfigDoc, "/config.json");
     serializeJson(mainConfigDoc, mainConfigDocString);
+    if (ws.availableForWriteAll() && ws.count()) {
+      ws.textAll(mainConfigDocString);
+#ifdef DEBUG
+      mps++;
+#endif
+    }
     domain = mainConfigDoc["settings"]["mDNS"].as<String>();
     applyLiveSettings();
     
